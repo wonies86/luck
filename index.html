@@ -141,6 +141,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .plus{color:var(--muted);font-weight:700}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--accent);color:var(--on-accent);padding:9px 16px;border-radius:99px;font-size:13.5px;font-weight:500;max-width:calc(100vw - 32px);z-index:20}
 .toast[hidden]{display:none}
+#statsBody .balls .it{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.hdrbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.hdrbar .status{min-width:0;flex:1 1 220px}
 footer{font-size:12.5px;color:var(--muted);line-height:1.6}
 .badge{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--accent);color:var(--on-accent);font-family:var(--f-body);margin-right:6px}
 .game.best{border:2px solid var(--accent);padding:11px 13px}
@@ -198,8 +201,18 @@ footer{font-size:12.5px;color:var(--muted);line-height:1.6}
   <header>
     <p class="eyebrow" id="roundLine">이번 추첨</p>
     <h1>수동 로또 뽑기</h1>
-    <p class="status" id="dataStatus"></p>
+    <div class="hdrbar">
+      <p class="status" id="dataStatus"></p>
+      <button class="btn sm" id="updBtn" type="button" aria-expanded="false" aria-controls="updPanel">당첨번호 업데이트</button>
+    </div>
   </header>
+
+  <div class="card" id="updPanel" hidden>
+    <h2>당첨번호 업데이트</h2>
+    <p class="hint"><span id="updNeed"></span>① <a href="https://www.dhlottery.co.kr/lt645/result" target="_blank" rel="noopener noreferrer">동행복권 결과 페이지</a>를 열어 당첨번호가 보이는 부분을 복사하고, ② 아래에 붙여넣어 주세요. 한 줄로 직접 입력해도 돼요. 예: <b style="font-family:var(--f-mono)">1250 3 11 16 19 21 27 7</b> (회차, 번호 6개, 마지막은 보너스)</p>
+    <textarea id="updText" aria-label="당첨번호 붙여넣기" placeholder="여기에 붙여넣거나 한 줄로 입력"></textarea>
+    <div class="bar"><p class="msg" id="updMsg" role="status"></p><div class="grp"><button class="btn" id="updClose" type="button">닫기</button><button class="btn primary" id="updApply" type="button">반영</button></div></div>
+  </div>
 
   <nav class="tabs" aria-label="화면 선택">
     <a href="#draw" data-tab="draw">뽑기</a>
@@ -289,29 +302,6 @@ footer{font-size:12.5px;color:var(--muted);line-height:1.6}
   </section>
 
   <section id="tab-data" class="stack" hidden>
-    <form class="card" id="addForm" autocomplete="off">
-      <h2>한 회차 추가</h2>
-      <p class="hint">토요일 추첨이 끝나면 회차와 1등 번호를 넣어두세요. 내 번호의 당첨 확인에 바로 쓰여요.</p>
-      <div class="addgrid">
-        <input type="number" id="ar" min="1" max="9999" inputmode="numeric" placeholder="회차" aria-label="회차" class="wide">
-        <input type="number" id="a1" min="1" max="45" inputmode="numeric" placeholder="번호1" aria-label="번호1">
-        <input type="number" id="a2" min="1" max="45" inputmode="numeric" placeholder="번호2" aria-label="번호2">
-        <input type="number" id="a3" min="1" max="45" inputmode="numeric" placeholder="번호3" aria-label="번호3">
-        <input type="number" id="a4" min="1" max="45" inputmode="numeric" placeholder="번호4" aria-label="번호4">
-        <input type="number" id="a5" min="1" max="45" inputmode="numeric" placeholder="번호5" aria-label="번호5">
-        <input type="number" id="a6" min="1" max="45" inputmode="numeric" placeholder="번호6" aria-label="번호6">
-        <input type="number" id="ab" min="1" max="45" inputmode="numeric" placeholder="보너스" aria-label="보너스 번호">
-      </div>
-      <div class="bar"><p class="msg" id="addMsg" role="status"></p><button class="btn primary" type="submit">추가</button></div>
-    </form>
-
-    <div class="card">
-      <h2>여러 회차 붙여넣기</h2>
-      <p class="hint">한 줄에 한 회차씩, 회차 · 번호 6개 · 보너스 번호 순서로 붙여넣으면 돼요. 날짜가 끼어 있어도, 쉼표나 탭으로 나뉘어 있어도 읽어요. 이미 있는 회차는 덮어써요.</p>
-      <textarea id="paste" placeholder="1182 31 21 13 25 28 1 22&#10;1175, 42, 8, 4, 3, 6, 32, 31" aria-label="당첨번호 붙여넣기"></textarea>
-      <div class="bar"><p class="msg" id="importMsg" role="status"></p><button class="btn primary" id="importBtn" type="button">반영</button></div>
-    </div>
-
     <div class="card">
       <h2>번호별 1등 출현 횟수</h2>
       <p class="hint" id="chartNote"></p>
@@ -321,7 +311,7 @@ footer{font-size:12.5px;color:var(--muted);line-height:1.6}
     <div class="card">
       <h2>최근 회차</h2>
       <div class="recent" id="recent"></div>
-      <p class="hint">1회부터 1249회까지는 올려주신 엑셀 기준으로 처음부터 들어 있어요. 새 회차는 위에서 추가하면 돼요.</p>
+      <p class="hint">1회부터 1249회까지는 올려주신 엑셀 기준으로 처음부터 들어 있어요. 새 회차는 맨 위의 당첨번호 업데이트 버튼으로 추가해요.</p>
     </div>
   </section>
 
@@ -468,7 +458,94 @@ var Core=(function(){
     }
     cut(); return best.slice(0,top);
   }
-  return {zoneCounts:zoneCounts,profile:profile,score:score,candidates:candidates,nextDraw:nextDraw,parseNums:parseNums,valid:valid,parseDraws:parseDraws,serialize:serialize,deserialize:deserialize,rank:rank,stats:stats,autoCond:autoCond,runs:runs,key:key,gen:gen,weights:weights};
+
+  var PB0=6/45;
+  function gapBucket(g){ return g<=2?g:g<=4?3:g<=7?4:g<=12?5:6; }
+  function predict(L){
+    var t=L.length, w=Math.min(50,t), i, s, b, last=[], cnt=[], rec=[], hz=[], ht=[];
+    for(i=0;i<=45;i++){ last.push(-1); cnt.push(0); rec.push(0); }
+    for(b=0;b<7;b++){ hz.push(0); ht.push(0); }
+    for(s=0;s<t;s++){
+      var hit={}, ns=L[s].n; for(i=0;i<6;i++) hit[ns[i]]=1;
+      if(s>=30){ for(i=1;i<=45;i++){ if(last[i]>=0){ b=gapBucket(s-1-last[i]); ht[b]++; if(hit[i]) hz[b]++; } } }
+      for(i=0;i<6;i++){ cnt[ns[i]]++; last[ns[i]]=s; if(s>=t-w) rec[ns[i]]++; }
+    }
+    var p=[0], sum=0;
+    for(i=1;i<=45;i++){
+      var ra=((cnt[i]+30*PB0)/(t+30))/PB0, rr=((rec[i]+20*PB0)/(w+20))/PB0;
+      b=last[i]<0?6:gapBucket(t-1-last[i]);
+      var rg=((hz[b]+50*PB0)/(ht[b]+50))/PB0, v=PB0*Math.pow(ra,.5)*Math.pow(rr,.3)*rg;
+      p.push(v); sum+=v;
+    }
+    for(i=1;i<=45;i++) p[i]=p[i]*6/sum;
+    return {p:p,hz:hz,ht:ht};
+  }
+  function topCombos(p,K,maxOv,past){
+    var ord=[],i; for(i=1;i<=45;i++) ord.push(i);
+    ord.sort(function(a,b){ return p[b]-p[a]||a-b; });
+    var pool=ord.slice(0,14).sort(num), lg=pool.map(function(x){ return Math.log(p[x]/PB0); }), all=[];
+    (function rec(st,cur,sc){
+      if(cur.length===6){ all.push({nums:cur.map(function(k){return pool[k]}),idx:Math.exp(sc)}); return; }
+      for(var k=st;k<=pool.length-(6-cur.length);k++){ cur.push(k); rec(k+1,cur,sc+lg[k]); cur.pop(); }
+    })(0,[],0);
+    all.sort(function(a,b){ return b.idx-a.idx; });
+    function ov(a,b){ var c=0; a.forEach(function(x){ if(b.indexOf(x)>=0) c++; }); return c; }
+    var out=[];
+    for(var lim=maxOv; lim<=5&&out.length<K; lim++){
+      for(i=0;i<all.length&&out.length<K;i++){
+        var cd=all[i]; if(past&&past.has(key(cd.nums))) continue;
+        if(out.indexOf(cd)>=0) continue;
+        if(out.every(function(o){ return ov(o.nums,cd.nums)<=lim; })) out.push(cd);
+      }
+    }
+    return out;
+  }
+  function backtest(L,bt){
+    var n=L.length; if(n<bt+100) return null;
+    var h6=0,hc=0,cn=0,t;
+    for(t=n-bt;t<n;t++){
+      var pr=predict(L.slice(0,t)).p, ord=[],i; for(i=1;i<=45;i++) ord.push(i);
+      ord.sort(function(a,b){ return pr[b]-pr[a]||a-b; });
+      var act=L[t].n;
+      for(i=0;i<6;i++) if(act.indexOf(ord[i])>=0) h6++;
+      topCombos(pr,5,3,null).forEach(function(c){ var m=0; c.nums.forEach(function(x){ if(act.indexOf(x)>=0) m++; }); hc+=m; cn++; });
+    }
+    var se=Math.sqrt(.6146/bt), m6=h6/bt, mc=hc/cn;
+    return {bt:bt,top6:m6,cand:mc,z:(m6-.8)/se,zc:(mc-.8)/se};
+  }
+
+  function findRound(raw,lab){
+    var m=raw.match(/(\d{1,4})\s*회\s*(?:차\s*)?당첨\s*결과/); if(m) return +m[1];
+    var before=raw.slice(0,lab), re=/(\d{1,4})\s*회/g, last=null, x;
+    while((x=re.exec(before))) last=+x[1];
+    if(last) return last;
+    var f=raw.match(/(\d{1,4})\s*회/); return f?+f[1]:null;
+  }
+  function readAfterLabel(raw,lab){
+    var seg=raw.slice(lab+4,lab+4+260)
+      .replace(/\d{4}\s*[.\-\/년]\s*\d{1,2}\s*[.\-\/월]\s*\d{1,2}\s*일?/g,' ')
+      .replace(/6\s*\/\s*45/g,' ')
+      .replace(/(?:\d{1,3}(?:,\d{3})+|\d+)\s*(?:회|등|명|원|개|게임|곳|%|억|만)/g,' ');
+    var re=/\d{1,3}(?:,\d{3})+|\d+/g, m, pos=[];
+    while((m=re.exec(seg))){ if(m[0].indexOf(',')>=0||m[0].length>2) continue; var v=+m[0]; if(v>=1&&v<=45) pos.push({v:v,i:m.index}); }
+    var nums=[], idx=[], k;
+    for(k=0;k<pos.length&&nums.length<6;k++){ if(nums.indexOf(pos[k].v)<0){ nums.push(pos[k].v); idx.push(k); } }
+    if(nums.length<6) return null;
+    var bonus=null;
+    for(k=idx[5]+1;k<pos.length;k++){ if(nums.indexOf(pos[k].v)<0){ bonus=pos[k].v; break; } }
+    if(bonus===null) return null;
+    return {n:nums.slice().sort(num),b:bonus};
+  }
+  function parseUpdate(text){
+    var raw=String(text||''), pos=0, lab;
+    while((lab=raw.indexOf('당첨번호',pos))>=0){
+      var rd=readAfterLabel(raw,lab), r=rd?findRound(raw,lab):null;
+      if(rd&&r&&valid(r,rd.n,rd.b)) return {rows:[{r:r,n:rd.n,b:rd.b}],skipped:0,how:'label'};
+      pos=lab+4;
+    }
+    var p=parseDraws(raw); p.how='lines'; return p;
+  }
+  return {parseUpdate:parseUpdate,predict:predict,topCombos:topCombos,backtest:backtest,zoneCounts:zoneCounts,profile:profile,score:score,candidates:candidates,nextDraw:nextDraw,parseNums:parseNums,valid:valid,parseDraws:parseDraws,serialize:serialize,deserialize:deserialize,rank:rank,stats:stats,autoCond:autoCond,runs:runs,key:key,gen:gen,weights:weights};
 })();
 </script>
 
@@ -539,7 +616,11 @@ var Core=(function(){
     $('#roundLine').innerHTML='이번 추첨 <b>'+target.round+'회</b> · '+target.month+'월 '+target.day+'일 토요일 20:35';
     var list=drawList(), last=list.length?list[list.length-1].r:0, st=Core.stats(list);
     var sync=syncState==='db'?'계정에 저장돼요.':syncState==='local'?'이 브라우저에만 저장돼요.':'저장 위치 확인 중…';
-    $('#dataStatus').innerHTML='당첨번호 '+list.length+'회차 반영 (최신 '+last+'회) · '+sync+(st.n<30?' 아직 적어서 조건은 기본값이에요. <a href="#data">당첨번호 넣기</a>':'');
+    $('#dataStatus').innerHTML='당첨번호 '+list.length+'회차 반영 (최신 '+last+'회) · '+sync+(st.n<30?' 아직 적어서 조건은 기본값이에요. 위의 업데이트 버튼으로 당첨번호를 넣어 주세요.':'');
+    var need=(last<target.round-1), ub=$('#updBtn');
+    ub.textContent=need?'새 당첨번호 입력 · '+(target.round-1)+'회':'당첨번호 업데이트';
+    ub.className='btn sm'+(need?' primary':'');
+    $('#updNeed').textContent=need?(target.round-1)+'회 당첨번호가 아직 없어요. ':'지금 최신 '+last+'회까지 들어 있어요. ';
   }
 
   function readCfg(){
@@ -804,7 +885,7 @@ var Core=(function(){
     }
     return ctxMemo;
   }
-  function recalcCands(){ var c=ctx(); cands=Core.candidates(c.P,c.prev,c.past,20000,10); }
+  function recalcCands(){ var c=ctx(); c.pred=Core.predict(c.L); cands=Core.topCombos(c.pred.p,5,3,c.past); c.bt=Core.backtest(c.L,200); }
   function pc(v,t){ var x=t?v/t*100:0; return (x>=10?Math.round(x):x.toFixed(1))+'%'; }
   function distCard(title,tbl,total,label,note){
     var ks=Object.keys(tbl).map(Number).sort(function(a,b){return a-b}); if(!ks.length) return '';
@@ -815,11 +896,34 @@ var Core=(function(){
     return '<div class="dist"><h3>'+title+'</h3>'+(note?'<p class="hint">'+note+'</p>':'')+rows+'</div>';
   }
   function numList(items,lab){ return '<div class="nl">'+items.map(function(x){ return '<div class="it">'+ball(x,{sm:1})+'<span>'+lab(x)+'</span></div>'; }).join('')+'</div>'; }
+
+  function predCard(){
+    var c=ctx(), pr=c.pred, p=pr.p, i, ord=[];
+    for(i=1;i<=45;i++) ord.push(i); ord.sort(function(a,b){ return p[b]-p[a]||a-b; });
+    var pcs=function(x){ return (p[x]*100).toFixed(1)+'%'; };
+    var nr=(c.L.length?c.L[c.L.length-1].r:target.round-1)+1;
+    var h='<div class="card"><h2>다음 '+nr+'회 후보 TOP 5</h2>'+
+      '<p class="hint">번호마다 다음 회차에 나올 확률을 세 가지 통계(전체 출현 빈도, 최근 50회 출현 빈도, 직전 이후 쉰 기간별 출현율)로 계산해 합쳤어요. 그 확률이 높은 번호끼리 묶었고, 후보끼리 겹치는 번호는 3개 이하예요. 이미 1등이 나온 조합은 뺐어요.</p><ol class="picks">'+
+      cands.map(function(cd,q){ var odd=oddOf(cd.nums);
+        return '<li class="pick"><span class="slot">'+(q+1)+'</span><div class="balls">'+cd.nums.map(function(x){ return '<div class="it">'+ball(x,{sm:1})+'<span>'+pcs(x)+'</span></div>'; }).join('')+'</div><div class="meta"><span class="info">모델 지수 ×'+cd.idx.toFixed(2)+' · 합 '+sumOf(cd.nums)+' · 홀 '+odd+' 짝 '+(6-odd)+'</span><div class="acts"><button class="btn sm" type="button" data-act="candsave" data-i="'+q+'">저장</button></div></div></li>';
+      }).join('')+'</ol><p class="hint">공 아래 숫자는 그 번호의 예상 출현 확률이에요. 무작위라면 모든 번호가 13.3%예요. 모델 지수는 여섯 번호의 확률을 13.3% 대비 비율로 곱한 값이고, 1.00이면 무작위와 같아요.</p></div>';
+    var labs=['직전 회차에 나옴','1회 쉼','2회 쉼','3~4회 쉼','5~7회 쉼','8~12회 쉼','13회 이상 쉼'], rows='';
+    for(i=0;i<7;i++){ var rt=pr.ht[i]?pr.hz[i]/pr.ht[i]:0;
+      rows+='<div class="drow"><span class="lb">'+labs[i]+'</span><span class="tr"><i style="width:'+(rt/.2*100)+'%"></i></span><span class="pc">'+(rt*100).toFixed(1)+'%</span></div>'; }
+    h+='<div class="card"><h2>예상 확률의 근거</h2><div class="flow"><div><h3>예상 확률 높은 번호 8개</h3>'+numList(ord.slice(0,8),pcs)+'</div><div><h3>예상 확률 낮은 번호 8개</h3>'+numList(ord.slice(-8).reverse(),pcs)+'</div>'+
+      '<div class="dist"><h3>쉬었던 기간별 다음 회차 출현율</h3><p class="hint">번호가 몇 회 쉬었는지에 따라 다음 회차에 나온 비율이에요. 무작위라면 모두 13.3%예요.</p>'+rows+'</div></div></div>';
+    var bt=c.bt;
+    if(bt){
+      var verdict=Math.abs(bt.z)<2?'무작위와 구별되지 않는 수준이에요.':(bt.z>0?'무작위보다 높게 나왔지만, 표본이 작아서 우연일 가능성도 커요.':'무작위보다 낮게 나왔어요.');
+      h+='<div class="card"><h2>이 모델, 실제로 맞았을까</h2><p>최근 '+bt.bt+'회를 한 회차씩, 그 직전까지의 기록만으로 예측해 봤어요. 확률이 높은 번호 6개는 회차당 평균 <b>'+bt.top6.toFixed(2)+'개</b>, 후보 5줄은 줄당 평균 <b>'+bt.cand.toFixed(2)+'개</b>가 맞았어요. 무작위로 6개를 고르면 평균 0.80개예요. '+verdict+'</p><p class="hint">로또는 매 회차 독립이라 과거 기록으로 다음 번호를 맞힐 방법은 없어요. 이 모델은 과거 기록에 있는 쏠림을 숫자로 정리한 것이에요.</p></div>';
+    }
+    return h;
+  }
   function renderStats(){
     if($('#tab-stats').hidden) return;
     var c=ctx(), P=c.P, L=c.L, n=P.n, i; if(!L.length){ $('#statsBody').innerHTML='<div class="empty-state">당첨번호를 넣으면 분석이 나와요.</div>'; return; }
     if(!cands) recalcCands();
-    var last=L[L.length-1], h='';
+    var last=L[L.length-1], h=predCard();
     h+='<div class="card"><h2>1등 번호의 모양 분포</h2><p class="hint">'+n+'회차 1등 번호를 여섯 가지 기준으로 나눠 본 분포예요. 진하게 표시된 줄이 가장 흔한 값이에요.</p><div class="dgrid">'+
       distCard('합계 (10 단위)',P.sumB,n,function(k){ return k===6?'~69':k===21?'210~':(k*10)+'~'+(k*10+9); })+
       distCard('홀짝',P.odd,n,function(k){ return '홀'+k+' 짝'+(6-k); })+
@@ -842,12 +946,6 @@ var Core=(function(){
     h+='<div class="card"><h2>번호 흐름</h2><div class="flow"><div><h3>직전 '+last.r+'회 번호</h3>'+numList(last.n,function(){return ''})+'<p class="hint">보너스 '+last.b+'. 역대 평균으로는 이 중 '+(P.carryN?(P.carryTot/P.carryN).toFixed(1):'0')+'개 정도가 다음 회차에 다시 나왔어요.</p></div>'+
       '<div><h3>최근 30회 많이 나온 번호</h3>'+numList(hot,function(x){return rf[x]+'회'})+'</div>'+
       '<div><h3>가장 오래 안 나온 번호</h3>'+numList(cold,function(x){return (last.r-seenAt[x])+'회째'})+'<p class="hint">오래 안 나왔다고 곧 나온다는 근거는 없어요. 기록을 보는 용도예요.</p></div></div></div>';
-    h+='<div class="card"><div class="bar"><h2>다음 '+target.round+'회 후보 TOP 10</h2><button class="btn sm" type="button" data-act="recalc">다시 계산</button></div>'+
-      '<p class="hint">조합 2만 개를 무작위로 만들어, 위 분포와 가장 닮은 순으로 골랐어요. 직전 회차와 겹치는 개수까지 반영해요. 형태 점수가 높다는 건 과거 1등과 모양이 비슷하다는 뜻이고, 당첨 확률과는 관계없어요. 저장은 뽑기 탭의 저장 회차로 들어가요.</p><ol class="picks">'+
-      cands.map(function(cd,q){
-        var odd=oddOf(cd.nums);
-        return '<li class="pick"><span class="slot">'+(q+1)+'</span><div class="balls">'+cd.nums.map(function(x){return ball(x,{sm:1})}).join('')+'</div><div class="meta"><span class="info">형태 점수 '+cd.score+' · 합 '+sumOf(cd.nums)+' · 홀 '+odd+' 짝 '+(6-odd)+'</span><div class="acts"><button class="btn sm" type="button" data-act="candsave" data-i="'+q+'">저장</button></div></div></li>';
-      }).join('')+'</ol></div>';
     $('#statsBody').innerHTML=h;
   }
 
@@ -865,19 +963,13 @@ var Core=(function(){
     }).join('');
   }
   function msg(id,t,err){ var el=$(id); el.textContent=t; el.className='msg'+(err?' err':''); }
-  function onAdd(e){
-    e.preventDefault();
-    var r=+$('#ar').value, n=[1,2,3,4,5,6].map(function(k){return +$('#a'+k).value}), b=+$('#ab').value;
-    if(!Core.valid(r,n,b)){ msg('#addMsg','회차와, 1~45 사이 서로 다른 번호 6개, 겹치지 않는 보너스 번호가 필요해요',1); return; }
-    var had=draws.has(r); draws.set(r,{r:r,n:n.slice().sort(function(a,b){return a-b}),b:b});
-    saveDraws(); ['ar','a1','a2','a3','a4','a5','a6','ab'].forEach(function(id){$('#'+id).value=''});
-    msg('#addMsg',r+'회를 '+(had?'수정':'추가')+'했어요'); afterData();
-  }
-  function onImport(){
-    var res=Core.parseDraws($('#paste').value);
-    if(!res.rows.length){ msg('#importMsg','읽을 수 있는 줄이 없어요. 회차, 번호 6개, 보너스 순서인지 확인해 주세요',1); return; }
-    addDraws(res.rows); saveDraws(); $('#paste').value='';
-    msg('#importMsg',res.rows.length+'회차를 반영했어요'+(res.skipped?' · '+res.skipped+'줄은 건너뛰었어요':'')); afterData();
+  function applyUpdate(text,sel){
+    var res=Core.parseUpdate(text);
+    if(!res.rows.length){ msg(sel,'번호를 읽지 못했어요. 회차, 번호 6개, 보너스 순서로 한 줄 입력해 보세요. 예: 1250 3 11 16 19 21 27 7',1); return false; }
+    addDraws(res.rows); saveDraws();
+    var d=res.rows[res.rows.length-1];
+    msg(sel,res.rows.length===1?d.r+'회 · '+d.n.join(' ')+' + 보너스 '+d.b+'로 읽어서 반영했어요. 다르면 같은 회차를 다시 입력하면 덮어써요.':res.rows.length+'회차를 반영했어요'+(res.skipped?' · '+res.skipped+'줄은 건너뛰었어요':''));
+    afterData(); return true;
   }
   function afterData(){ if(!touched) applyAuto(); renderAll(); renderGames(); }
 
@@ -904,7 +996,6 @@ var Core=(function(){
       delTimer[id]=setTimeout(function(){ b.dataset.arm=''; b.textContent='삭제'; },3000);
     }
     else if(a==='copy'){ copyGroup(+b.dataset.r,b); }
-    else if(a==='recalc'){ recalcCands(); renderStats(); }
     else if(a==='candsave'){
       var r2=roundVal()||target.round, cd=cands&&cands[i];
       if(cd&&addPick(cd.nums,r2)){ savePicks(); renderAll(); toast(r2+'회에 저장했어요'); } else toast('이미 저장한 조합이에요');
@@ -927,8 +1018,14 @@ var Core=(function(){
     $('#'+id).addEventListener('input',function(){ touched=true; });
   });
   $('#roundFilter').addEventListener('change',renderMine);
-  $('#addForm').addEventListener('submit',onAdd);
-  $('#importBtn').addEventListener('click',onImport);
+  $('#updBtn').addEventListener('click',function(){
+    var p=$('#updPanel'); p.hidden=!p.hidden; this.setAttribute('aria-expanded',p.hidden?'false':'true');
+    if(!p.hidden){ msg('#updMsg',''); $('#updText').focus(); }
+  });
+  $('#updClose').addEventListener('click',function(){ $('#updPanel').hidden=true; $('#updBtn').setAttribute('aria-expanded','false'); });
+  $('#updApply').addEventListener('click',function(){
+    if(applyUpdate($('#updText').value,'#updMsg')){ $('#updText').value=''; toast('당첨번호를 반영했어요'); }
+  });
   window.addEventListener('hashchange',route);
 
   /* 시작 */
